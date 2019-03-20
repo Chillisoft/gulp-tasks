@@ -1,26 +1,17 @@
-const
-  gulp = requireModule("gulp-with-help"),
-  getToolsFolder = requireModule("get-tools-folder"),
-  msbuild = require("gulp-msbuild");
+var gulp = require('gulp');
+var msbuild = require('gulp-msbuild');
+function nugetRestore() {
+    return gulp.src('**/*.sln')
+            .pipe(msbuild({
+                toolsVersion: 14.0,
+                targets: ['Clean', 'Build'],
+                configuration: 'Debug',
+                stdout: true,
+                verbosity: 'minimal',
+                errorOnFail: true,
+                architecture: 'x64'
+            }));
+}
+gulp.task('build', gulp.series(nugetRestore));
 
-gulp.task("prebuild", ["nuget-restore", "install-tools"]);
 
-gulp.task("build",
-  "Builds all Visual Studio solutions in tree",
-  ["prebuild"],
-  () => {
-    return gulp.src([
-      "**/*.sln",
-      "!**/node_modules/**/*.sln",
-      `!./${getToolsFolder()}/**/*.sln`
-    ]).pipe(msbuild({
-      toolsVersion: "auto",
-      targets: ["Clean", "Build"],
-      configuration: process.env.BUILD_CONFIGURATION || "Debug",
-      stdout: true,
-      verbosity: "minimal",
-      errorOnFail: true,
-      architecture: "x64",
-      nologo: false
-    }));
-  });
